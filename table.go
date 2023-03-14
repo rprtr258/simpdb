@@ -42,7 +42,9 @@ func (t *Table[E]) ensureFileExists() error {
 	return nil
 }
 
-func (t *Table[E]) Read(r DB, filter func(E) bool) (map[string]E, error) {
+// Read all records from table that satisfy predicate. Function is lowlevel enough
+// so should be used rarely.
+func (t *Table[E]) Read(filter func(E) bool) (map[string]E, error) {
 	if err := t.ensureFileExists(); err != nil {
 		return nil, xerr.NewW(err)
 	}
@@ -68,7 +70,9 @@ func (t *Table[E]) Read(r DB, filter func(E) bool) (map[string]E, error) {
 	return res, nil
 }
 
-func (t *Table[E]) Write(r DB, entities []E) error {
+// Write fills table with entities. Function is lowlevel enough so should be
+// used rarely.
+func (t *Table[E]) Write(entities []E) error {
 	if err := t.ensureFileExists(); err != nil {
 		return xerr.NewW(err)
 	}
