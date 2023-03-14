@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-
-	"github.com/rprtr258/xerr"
 )
 
 var (
@@ -32,16 +30,16 @@ type Table[E Entity] struct {
 func (t *Table[E]) ensureFileExists() error {
 	if _, err := os.Stat(t.filename); err != nil {
 		if !os.IsNotExist(err) {
-			return xerr.NewW(err)
+			return fmt.Errorf("failed checking table file %s: %w", t.filename, err)
 		}
 
 		file, err := os.Create(t.filename)
 		if err != nil {
-			return xerr.NewW(err)
+			return fmt.Errorf("failed creating table file %s: %w", t.filename, err)
 		}
 
 		if _, err := file.Write([]byte("{}")); err != nil {
-			return xerr.NewW(err)
+			return fmt.Errorf("failed filling table file %s with inital data: %w", t.filename, err)
 		}
 
 		return file.Close()
