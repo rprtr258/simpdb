@@ -18,6 +18,7 @@ func New(dir string) *DB {
 	}
 }
 
+// GetTable for the entity E.
 func GetTable[E Entity](db *DB) *Table[E] {
 	var e E
 	entityName := reflect.TypeOf(e).Name()
