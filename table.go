@@ -16,7 +16,7 @@ var (
 // to be able to store them. Only entities with different IDs will be stored.
 type Entity interface {
 	ID() string
-	Name() string
+	TableName() string
 }
 
 // Table is access point for storage of one entity type.
