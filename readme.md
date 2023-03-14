@@ -9,10 +9,13 @@ type User struct {
     Gender bool `json:"gender"`
 }
 
+// ID - get user ID. Must be unique among all users.
 func (u User) ID() string {
     return u.Name
 }
 
+// TableName - get table name for user entities. Must be unique among all table
+// names for all entities.
 func (User) TableName() string {
     return "users"
 }

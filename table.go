@@ -15,7 +15,9 @@ var (
 // Entity is interface for all table entities. Structs must implement it for DB
 // to be able to store them. Only entities with different IDs will be stored.
 type Entity interface {
+	// ID - get ID of an entity. All entities inside table must have unique IDs.
 	ID() string
+	// TableName - get table name for entity. All tables must have unique name.
 	TableName() string
 }
 
