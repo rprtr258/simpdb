@@ -13,6 +13,12 @@ type DB struct {
 	dir string
 }
 
+func New(dir string) *DB {
+	return &DB{
+		dir: dir,
+	}
+}
+
 type entity interface {
 	ID() string
 }
@@ -43,7 +49,7 @@ func ensureTableFile(name string) error {
 	return nil
 }
 
-func read[E entity](r DB, filter func(E) bool) ([]E, error) {
+func Read[E entity](r DB, filter func(E) bool) (map[string]E, error) {
 	tableFilename := filepath.Join(r.dir, entityName[E]())
 
 	if err := ensureTableFile(tableFilename); err != nil {
@@ -61,17 +67,17 @@ func read[E entity](r DB, filter func(E) bool) ([]E, error) {
 		return nil, xerr.NewW(err)
 	}
 
-	res := make([]E, 0, len(all))
-	for _, entity := range all {
+	res := make(map[string]E, len(all))
+	for id, entity := range all {
 		if filter(entity) {
-			res = append(res, entity)
+			res[id] = entity
 		}
 	}
 
 	return res, nil
 }
 
-func write[E entity](r DB, entities []E) error {
+func Write[E entity](r DB, entities []E) error {
 	tableFilename := filepath.Join(r.dir, entityName[E]())
 
 	if err := ensureTableFile(tableFilename); err != nil {
