@@ -18,12 +18,12 @@ type jsonStorage[E Entity] struct {
 func (t *jsonStorage[E]) ensureFileExists() error {
 	if _, err := os.Stat(t.dir); err != nil {
 		if !os.IsNotExist(err) {
-			return fmt.Errorf("checking directory %s: %w", t.dir, err)
+			return fmt.Errorf("check directory %s: %w", t.dir, err)
 		}
 
 		// TODO: mkdirall
 		if err := os.Mkdir(t.dir, 0755); err != nil {
-			return fmt.Errorf("creating directory %s: %w", t.dir, err)
+			return fmt.Errorf("creat directory %s: %w", t.dir, err)
 		}
 	}
 
@@ -58,12 +58,12 @@ func (t *jsonStorage[E]) Read(filter func(E) bool) (map[string]E, error) {
 
 	bytes, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, fmt.Errorf("read, reading file: %w", err)
+		return nil, fmt.Errorf("read, read file: %w", err)
 	}
 
 	var all map[string]E
 	if err := json.Unmarshal(bytes, &all); err != nil {
-		return nil, fmt.Errorf("read, decoding data: %w", err)
+		return nil, fmt.Errorf("read, decode data: %w", err)
 	}
 
 	res := make(map[string]E, len(all))
@@ -92,13 +92,13 @@ func (t *jsonStorage[E]) Write(entities map[string]E) error {
 
 	bytes, err := t.marshal(entities)
 	if err != nil {
-		return fmt.Errorf("write, encoding json: %w", err)
+		return fmt.Errorf("write, encode json: %w", err)
 	}
 
 	filename := filepath.Join(t.dir, t.name)
 
 	if err := os.WriteFile(filename, bytes, 0644); err != nil {
-		return fmt.Errorf("write, writing file: %w", err)
+		return fmt.Errorf("write, write file: %w", err)
 	}
 
 	return nil

@@ -21,17 +21,21 @@ type Entity interface {
 
 // Table is access point for storage of one entity type.
 type Table[E Entity] struct {
-	jsonStorage[E]
+	storage jsonStorage[E]
 }
+
+// func (t *Table[E]) Close() error {
+// 	return nil
+// }
 
 // Update all records in table.
 func (t *Table[E]) Update(f func(map[string]E) map[string]E) error {
-	all, err := t.Read(func(e E) bool { return true })
+	all, err := t.storage.Read(func(e E) bool { return true })
 	if err != nil {
 		return fmt.Errorf("update: %w", err)
 	}
 
-	if err := t.Write(f(all)); err != nil {
+	if err := t.storage.Write(f(all)); err != nil {
 		return fmt.Errorf("update: %w", err)
 	}
 
@@ -40,13 +44,13 @@ func (t *Table[E]) Update(f func(map[string]E) map[string]E) error {
 
 // GetAll records in table.
 func (t *Table[E]) GetAll() (map[string]E, error) {
-	return t.Read(func(E) bool { return true })
+	return t.storage.Read(func(E) bool { return true })
 }
 
 // Get single record by id. If none found and no errors happened returns
 // ErrNoneFound as error.
 func (t *Table[E]) Get(id string) (E, error) {
-	res, err := t.Read(func(entity E) bool { return entity.ID() == id })
+	res, err := t.storage.Read(func(entity E) bool { return entity.ID() == id })
 	if err != nil {
 		var e E
 		return e, err
@@ -66,7 +70,7 @@ func (t *Table[E]) Get(id string) (E, error) {
 
 // GetBy - get all records for which filter returned true.
 func (t *Table[E]) GetBy(filter func(E) bool) (map[string]E, error) {
-	return t.Read(filter)
+	return t.storage.Read(filter)
 }
 
 // Insert entity into database. If entity already present gives ErrAlreadyPresent.

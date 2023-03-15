@@ -23,7 +23,7 @@ func GetTable[E Entity](db *DB, config TableConfig) *Table[E] {
 	var e E
 	entityName := e.TableName()
 	return &Table[E]{
-		jsonStorage: jsonStorage[E]{
+		storage: jsonStorage[E]{
 			dir:    db.dir,
 			name:   entityName,
 			intend: config.Indent,
