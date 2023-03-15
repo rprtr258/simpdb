@@ -1,9 +1,5 @@
 package simpdb
 
-import (
-	"path/filepath"
-)
-
 // DB handler for database directory
 type DB struct {
 	dir string
@@ -22,7 +18,7 @@ func GetTable[E Entity](db *DB) *Table[E] {
 	var e E
 	entityName := e.TableName()
 	return &Table[E]{
-		filename: filepath.Join(db.dir, entityName),
-		name:     entityName,
+		dir:  db.dir,
+		name: entityName,
 	}
 }
