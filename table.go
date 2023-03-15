@@ -13,10 +13,49 @@ type Entity interface {
 	TableName() string
 }
 
+type selectQuery[E Entity] struct {
+	data   map[string]E
+	filter func(string, E) bool
+}
+
+// All - get records in table.
+func (t selectQuery[E]) All() map[string]E {
+	res := make(map[string]E)
+	for id, entity := range t.data {
+		if t.filter(id, entity) {
+			res[id] = entity
+		}
+	}
+	return res
+}
+
+// Filter records matching given filter. Filter accepts id and entity and must
+// return true for all entities to keep.
+func (t selectQuery[E]) Filter(filter func(string, E) bool) selectQuery[E] {
+	return selectQuery[E]{
+		data: t.data,
+		filter: func(id string, entity E) bool {
+			return t.filter(id, entity) && filter(id, entity)
+		},
+	}
+}
+
+// Delete - delete all filtered entities. Returns number of deleted items.
+func (t selectQuery[E]) Delete() int {
+	deleted := 0
+	for id, entity := range t.data {
+		if t.filter(id, entity) {
+			delete(t.data, id)
+			deleted++
+		}
+	}
+	return deleted
+}
+
 // Table is access point for storage of one entity type.
 type Table[E Entity] struct {
+	selectQuery[E]
 	storage *jsonStorage[E]
-	data    map[string]E
 }
 
 func newTable[E Entity](storage *jsonStorage[E]) (*Table[E], error) {
@@ -27,44 +66,26 @@ func newTable[E Entity](storage *jsonStorage[E]) (*Table[E], error) {
 
 	return &Table[E]{
 		storage: storage,
-		data:    data,
+		selectQuery: selectQuery[E]{
+			data:   data,
+			filter: func(s string, e E) bool { return true },
+		},
 	}, nil
 }
 
 // Close table, dumps updated data to file.
 func (t *Table[E]) Close() error {
-	if err := t.storage.Write(t.data); err != nil {
+	if err := t.storage.Write(t.selectQuery.data); err != nil {
 		return fmt.Errorf("close table: %w", err)
 	}
 
 	return nil
 }
 
-// Update all records in table.
-func (t *Table[E]) Update(f func(map[string]E) map[string]E) {
-	t.data = f(t.data)
-}
-
-// GetAll records in table.
-func (t *Table[E]) GetAll() map[string]E {
-	return t.data
-}
-
 // Get single record by id. If none found, false returned as second result.
 func (t *Table[E]) Get(id string) (E, bool) {
 	res, ok := t.data[id]
 	return res, ok
-}
-
-// Filter - get all records for which filter returned true.
-func (t *Table[E]) Filter(by func(E) bool) map[string]E {
-	res := make(map[string]E)
-	for id, entity := range t.data {
-		if by(entity) {
-			res[id] = entity
-		}
-	}
-	return res
 }
 
 // Insert entity into database. If entity already present, does nothing and
@@ -86,9 +107,9 @@ func (t *Table[E]) Upsert(entity E) {
 	t.data[id] = entity
 }
 
-// Delete entity by id. If entity was not found, does nothing. Boolean indicates
-// whether entity was actually deleted.
-func (t *Table[E]) Delete(id string) bool {
+// DeleteByID - delete entity by id. If entity was not found, does nothing.
+// Boolean indicates whether entity was actually deleted.
+func (t *Table[E]) DeleteByID(id string) bool {
 	_, present := t.data[id]
 	if present {
 		delete(t.data, id)
@@ -96,17 +117,4 @@ func (t *Table[E]) Delete(id string) bool {
 	}
 
 	return false
-}
-
-// DeleteBy - delete all entities for which filter returns true. Returns number
-// of deleted items.
-func (t *Table[E]) DeleteBy(filter func(E) bool) int {
-	deleted := 0
-	for id, entity := range t.data {
-		if filter(entity) {
-			delete(t.data, id)
-			deleted++
-		}
-	}
-	return deleted
 }
