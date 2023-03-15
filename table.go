@@ -112,7 +112,7 @@ func (t *Table[E]) Update(f func(map[string]E) map[string]E) error {
 		return fmt.Errorf("update failed: %w", err)
 	}
 
-	if err := t.Write(all); err != nil {
+	if err := t.Write(f(all)); err != nil {
 		return fmt.Errorf("update failed: %w", err)
 	}
 
