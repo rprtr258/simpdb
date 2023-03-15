@@ -19,10 +19,6 @@ type Table[E Entity] struct {
 	data    map[string]E
 }
 
-// func (t *Table[E]) Close() error {
-// 	return nil
-// }
-
 func newTable[E Entity](storage *jsonStorage[E]) (*Table[E], error) {
 	data, err := storage.Read()
 	if err != nil {
