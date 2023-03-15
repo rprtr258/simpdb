@@ -9,8 +9,6 @@ import (
 type Entity interface {
 	// ID - get ID of an entity. All entities inside table must have unique IDs.
 	ID() string
-	// TableName - get table name for entity. All tables must have unique name.
-	TableName() string
 }
 
 type selectQuery[E Entity] struct {
@@ -50,6 +48,22 @@ func (t selectQuery[E]) Delete() int {
 		}
 	}
 	return deleted
+}
+
+// Update entities using fn function.
+func (t selectQuery[E]) Update(fn func(E) E) {
+	for id, entity := range t.data {
+		if !t.filter(id, entity) {
+			continue
+		}
+
+		newEntity := fn(entity)
+		newID := newEntity.ID()
+		if id != newID {
+			delete(t.data, id)
+		}
+		t.data[newID] = newEntity
+	}
 }
 
 // Table is access point for storage of one entity type.

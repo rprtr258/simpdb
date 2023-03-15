@@ -15,7 +15,9 @@ type jsonStorage[E Entity] struct {
 	name string
 }
 
-func newJSONStorage[E Entity](dir, name string, indent bool) (*jsonStorage[E], error) {
+func newJSONStorage[E Entity](dir, tableName string, indent bool) (*jsonStorage[E], error) {
+	basename := tableName + ".json"
+
 	if _, err := os.Stat(dir); err != nil {
 		if !os.IsNotExist(err) {
 			return nil, fmt.Errorf("check directory %s: %w", dir, err)
@@ -27,7 +29,7 @@ func newJSONStorage[E Entity](dir, name string, indent bool) (*jsonStorage[E], e
 		}
 	}
 
-	filename := filepath.Join(dir, name)
+	filename := filepath.Join(dir, basename)
 
 	if _, err := os.Stat(filename); err != nil {
 		if !os.IsNotExist(err) {
@@ -47,7 +49,7 @@ func newJSONStorage[E Entity](dir, name string, indent bool) (*jsonStorage[E], e
 
 	return &jsonStorage[E]{
 		dir:    dir,
-		name:   name,
+		name:   basename,
 		intend: indent,
 	}, nil
 }

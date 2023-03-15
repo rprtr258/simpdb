@@ -21,11 +21,12 @@ type TableConfig struct {
 }
 
 // GetTable for the entity E.
-func GetTable[E Entity](db *DB, config TableConfig) (*Table[E], error) {
-	var e E
-	entityName := e.TableName()
-
-	storage, err := newJSONStorage[E](db.dir, entityName, config.Indent)
+func GetTable[E Entity](
+	db *DB,
+	tableName string,
+	config TableConfig,
+) (*Table[E], error) {
+	storage, err := newJSONStorage[E](db.dir, tableName, config.Indent)
 	if err != nil {
 		return nil, fmt.Errorf("get table: %w", err)
 	}
