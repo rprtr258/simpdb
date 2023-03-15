@@ -37,6 +37,7 @@ func (t *Table[E]) ensureFileExists() error {
 			return fmt.Errorf("failed checking directory %s: %w", dir, err)
 		}
 
+		// TODO: mkdirall
 		if err := os.Mkdir(dir, 0755); err != nil {
 			return fmt.Errorf("failed creating directory %s: %w", dir, err)
 		}

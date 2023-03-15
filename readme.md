@@ -38,7 +38,7 @@ func main() {
         Gender: true,
     })
     // insert new/update existing user
-    _ := users.Insert(User{
+    _ := users.Upsert(User{
         Name: "mary",
         Gender: false,
     })
