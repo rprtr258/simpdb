@@ -9,9 +9,13 @@ import (
 
 type jsonStorage[E Entity] struct {
 	intend bool
+	// files directory
+	dir string
+	// name of table file
+	name string
 }
 
-func (t *Table[E]) ensureFileExists() error {
+func (t *jsonStorage[E]) ensureFileExists() error {
 	if _, err := os.Stat(t.dir); err != nil {
 		if !os.IsNotExist(err) {
 			return fmt.Errorf("failed checking directory %s: %w", t.dir, err)
@@ -45,7 +49,7 @@ func (t *Table[E]) ensureFileExists() error {
 }
 
 // Read all records from table that satisfy predicate.
-func (t *Table[E]) Read(filter func(E) bool) (map[string]E, error) {
+func (t *jsonStorage[E]) Read(filter func(E) bool) (map[string]E, error) {
 	if err := t.ensureFileExists(); err != nil {
 		return nil, fmt.Errorf("read failed: %w", err)
 	}
@@ -73,7 +77,7 @@ func (t *Table[E]) Read(filter func(E) bool) (map[string]E, error) {
 }
 
 // Write fills table with entities.
-func (t *Table[E]) Write(entities map[string]E) error {
+func (t *jsonStorage[E]) Write(entities map[string]E) error {
 	if err := t.ensureFileExists(); err != nil {
 		return fmt.Errorf("write failed: %w", err)
 	}

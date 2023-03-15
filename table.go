@@ -21,10 +21,7 @@ type Entity interface {
 
 // Table is access point for storage of one entity type.
 type Table[E Entity] struct {
-	// files directory
-	dir string
-	// name of entity in the table
-	name string
+	jsonStorage[E]
 }
 
 // Update all records in table.

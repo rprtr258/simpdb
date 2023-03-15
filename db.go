@@ -13,12 +13,20 @@ func New(dir string) *DB {
 	}
 }
 
+type TableConfig struct {
+	// Indent indicates whether to do json indenting when writing file
+	Indent bool
+}
+
 // GetTable for the entity E.
-func GetTable[E Entity](db *DB) *Table[E] {
+func GetTable[E Entity](db *DB, config TableConfig) *Table[E] {
 	var e E
 	entityName := e.TableName()
 	return &Table[E]{
-		dir:  db.dir,
-		name: entityName,
+		jsonStorage: jsonStorage[E]{
+			dir:    db.dir,
+			name:   entityName,
+			intend: config.Indent,
+		},
 	}
 }
