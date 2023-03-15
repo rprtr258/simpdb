@@ -2,6 +2,7 @@ package simpdb
 
 import (
 	"fmt"
+	"sort"
 )
 
 // Entity is interface for all table entities. Structs must implement it for DB
@@ -11,39 +12,120 @@ type Entity interface {
 	ID() string
 }
 
+type listQuery[E Entity] struct {
+	selectQuery[E]
+	less func(E, E) bool
+}
+
+// Sort entities list by given less function.
+func (q listQuery[E]) Sort(less func(E, E) bool) listQuery[E] {
+	return listQuery[E]{
+		selectQuery: q.selectQuery,
+		less:        less,
+	}
+}
+
+// Min - get minimal/first entitiy in list. If none, boolean is false.
+func (q listQuery[E]) Min() (E, bool) {
+	atLeastOneFound := false
+	var min E
+	for id, entity := range q.data {
+		if q.filter(id, entity) {
+			if !atLeastOneFound {
+				atLeastOneFound = true
+				min = entity
+			} else if q.less(entity, min) {
+				min = entity
+			}
+		}
+	}
+
+	if !atLeastOneFound {
+		return min, false
+	}
+
+	return min, true
+}
+
+// Max - get maximum/last entitiy in list. If none, boolean is false.
+func (q listQuery[E]) Max() (E, bool) {
+	atLeastOneFound := false
+	var max E
+	for id, entity := range q.data {
+		if q.filter(id, entity) {
+			if !atLeastOneFound {
+				atLeastOneFound = true
+				max = entity
+			} else if q.less(max, entity) {
+				max = entity
+			}
+		}
+	}
+
+	if !atLeastOneFound {
+		return max, false
+	}
+
+	return max, true
+}
+
+// All - get all entities in list.
+func (q listQuery[E]) All() []E {
+	res := make([]E, 0, len(q.data))
+	for id, entity := range q.data {
+		if q.filter(id, entity) {
+			res = append(res, entity)
+		}
+	}
+	sort.Slice(res, func(i, j int) bool {
+		return q.less(res[i], res[j])
+	})
+	return res
+}
+
 type selectQuery[E Entity] struct {
 	data   map[string]E
 	filter func(string, E) bool
 }
 
 // All - get records in table.
-func (t selectQuery[E]) All() map[string]E {
+func (q selectQuery[E]) All() map[string]E {
 	res := make(map[string]E)
-	for id, entity := range t.data {
-		if t.filter(id, entity) {
+	for id, entity := range q.data {
+		if q.filter(id, entity) {
 			res[id] = entity
 		}
 	}
 	return res
 }
 
+// List - get records in table as list. By default, they are sorted by ID.
+func (q selectQuery[E]) List() listQuery[E] {
+	return listQuery[E]{
+		selectQuery: q,
+		less: func(e1, e2 E) bool {
+			return e1.ID() < e2.ID()
+		},
+	}
+}
+
 // Filter records matching given filter. Filter accepts id and entity and must
 // return true for all entities to keep.
-func (t selectQuery[E]) Filter(filter func(string, E) bool) selectQuery[E] {
+func (q selectQuery[E]) Filter(filter func(string, E) bool) selectQuery[E] {
 	return selectQuery[E]{
-		data: t.data,
+		data: q.data,
 		filter: func(id string, entity E) bool {
-			return t.filter(id, entity) && filter(id, entity)
+			return q.filter(id, entity) && filter(id, entity)
 		},
 	}
 }
 
 // Delete - delete all filtered entities. Returns number of deleted items.
-func (t selectQuery[E]) Delete() int {
+func (q selectQuery[E]) Delete() int {
 	deleted := 0
-	for id, entity := range t.data {
-		if t.filter(id, entity) {
-			delete(t.data, id)
+	for id, entity := range q.data {
+		if q.filter(id, entity) {
+			delete(q.data, id)
 			deleted++
 		}
 	}
@@ -51,18 +133,18 @@ func (t selectQuery[E]) Delete() int {
 }
 
 // Update entities using fn function.
-func (t selectQuery[E]) Update(fn func(E) E) {
-	for id, entity := range t.data {
-		if !t.filter(id, entity) {
+func (q selectQuery[E]) Update(fn func(E) E) {
+	for id, entity := range q.data {
+		if !q.filter(id, entity) {
 			continue
 		}
 
 		newEntity := fn(entity)
 		newID := newEntity.ID()
 		if id != newID {
-			delete(t.data, id)
+			delete(q.data, id)
 		}
-		t.data[newID] = newEntity
+		q.data[newID] = newEntity
 	}
 }
 
