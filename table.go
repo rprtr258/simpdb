@@ -28,11 +28,11 @@ type Table[E Entity] struct {
 func (t *Table[E]) Update(f func(map[string]E) map[string]E) error {
 	all, err := t.Read(func(e E) bool { return true })
 	if err != nil {
-		return fmt.Errorf("update failed: %w", err)
+		return fmt.Errorf("update: %w", err)
 	}
 
 	if err := t.Write(f(all)); err != nil {
-		return fmt.Errorf("update failed: %w", err)
+		return fmt.Errorf("update: %w", err)
 	}
 
 	return nil
