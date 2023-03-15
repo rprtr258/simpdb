@@ -26,9 +26,17 @@ func (q selectQuery[E]) List() listQuery[E] {
 	}
 }
 
-// Filter records matching given filter. Filter accepts id and entity and must
-// return true for all entities to keep.
-func (q selectQuery[E]) Filter(filter func(string, E) bool) selectQuery[E] {
+// Sort entities using given function.
+func (q selectQuery[E]) Sort(less func(E, E) bool) listQuery[E] {
+	return listQuery[E]{
+		selectQuery: q,
+		less:        less,
+	}
+}
+
+// Where - get records matching given filter. Where accepts id and entity and
+// must return true for all entities to keep.
+func (q selectQuery[E]) Where(filter func(string, E) bool) selectQuery[E] {
 	return selectQuery[E]{
 		data: q.data,
 		filter: func(id string, entity E) bool {
