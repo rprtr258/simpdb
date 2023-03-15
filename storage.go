@@ -53,7 +53,7 @@ func newJSONStorage[E Entity](dir, name string, indent bool) (*jsonStorage[E], e
 }
 
 // Read all records from table that satisfy predicate.
-func (t *jsonStorage[E]) Read(filter func(E) bool) (map[string]E, error) {
+func (t *jsonStorage[E]) Read() (map[string]E, error) {
 	filename := filepath.Join(t.dir, t.name)
 
 	bytes, err := os.ReadFile(filename)
@@ -61,16 +61,9 @@ func (t *jsonStorage[E]) Read(filter func(E) bool) (map[string]E, error) {
 		return nil, fmt.Errorf("read, read file: %w", err)
 	}
 
-	var all map[string]E
-	if err := json.Unmarshal(bytes, &all); err != nil {
+	var res map[string]E
+	if err := json.Unmarshal(bytes, &res); err != nil {
 		return nil, fmt.Errorf("read, decode data: %w", err)
-	}
-
-	res := make(map[string]E, len(all))
-	for id, entity := range all {
-		if filter(entity) {
-			res[id] = entity
-		}
 	}
 
 	return res, nil

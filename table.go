@@ -1,13 +1,7 @@
 package simpdb
 
 import (
-	"errors"
 	"fmt"
-)
-
-var (
-	ErrAlreadyPresent = errors.New("can't insert, entity already exists")
-	ErrNoneFound      = errors.New("entity was not found")
 )
 
 // Entity is interface for all table entities. Structs must implement it for DB
@@ -22,6 +16,7 @@ type Entity interface {
 // Table is access point for storage of one entity type.
 type Table[E Entity] struct {
 	storage *jsonStorage[E]
+	data    map[string]E
 }
 
 // func (t *Table[E]) Close() error {
@@ -29,103 +24,93 @@ type Table[E Entity] struct {
 // }
 
 func newTable[E Entity](storage *jsonStorage[E]) (*Table[E], error) {
+	data, err := storage.Read()
+	if err != nil {
+		return nil, fmt.Errorf("new table: %w", err)
+	}
+
 	return &Table[E]{
 		storage: storage,
+		data:    data,
 	}, nil
 }
 
-// Update all records in table.
-func (t *Table[E]) Update(f func(map[string]E) map[string]E) error {
-	all, err := t.storage.Read(func(e E) bool { return true })
-	if err != nil {
-		return fmt.Errorf("update: %w", err)
-	}
-
-	if err := t.storage.Write(f(all)); err != nil {
-		return fmt.Errorf("update: %w", err)
+// Close table, dumps updated data to file.
+func (t *Table[E]) Close() error {
+	if err := t.storage.Write(t.data); err != nil {
+		return fmt.Errorf("close table: %w", err)
 	}
 
 	return nil
+}
+
+// Update all records in table.
+func (t *Table[E]) Update(f func(map[string]E) map[string]E) {
+	t.data = f(t.data)
 }
 
 // GetAll records in table.
-func (t *Table[E]) GetAll() (map[string]E, error) {
-	return t.storage.Read(func(E) bool { return true })
+func (t *Table[E]) GetAll() map[string]E {
+	return t.data
 }
 
-// Get single record by id. If none found and no errors happened returns
-// ErrNoneFound as error.
-func (t *Table[E]) Get(id string) (E, error) {
-	res, err := t.storage.Read(func(entity E) bool { return entity.ID() == id })
-	if err != nil {
-		var e E
-		return e, err
-	}
-
-	if len(res) == 0 {
-		var e E
-		return e, ErrNoneFound
-	}
-
-	for _, entity := range res {
-		return entity, nil
-	}
-
-	panic("unreachable")
+// Get single record by id. If none found, false returned as second result.
+func (t *Table[E]) Get(id string) (E, bool) {
+	res, ok := t.data[id]
+	return res, ok
 }
 
-// GetBy - get all records for which filter returned true.
-func (t *Table[E]) GetBy(filter func(E) bool) (map[string]E, error) {
-	return t.storage.Read(filter)
-}
-
-// Insert entity into database. If entity already present gives ErrAlreadyPresent.
-func (t *Table[E]) Insert(entity E) error {
-	id := entity.ID()
-	alreadyPresent := false
-	err := t.Update(func(m map[string]E) map[string]E {
-		if _, ok := m[id]; ok {
-			alreadyPresent = true
-		} else {
-			m[id] = entity
+// Filter - get all records for which filter returned true.
+func (t *Table[E]) Filter(by func(E) bool) map[string]E {
+	res := make(map[string]E)
+	for id, entity := range t.data {
+		if by(entity) {
+			res[id] = entity
 		}
-		return m
-	})
-	if err != nil {
-		return err
 	}
+	return res
+}
 
+// Insert entity into database. If entity already present, does nothing and
+// returns false.
+func (t *Table[E]) Insert(entity E) bool {
+	id := entity.ID()
+	_, alreadyPresent := t.data[id]
 	if alreadyPresent {
-		return ErrAlreadyPresent
+		return false
 	}
 
-	return nil
+	t.data[id] = entity
+	return true
 }
 
 // Upsert - insert entity into database. If entity already present, overwrites it.
-func (t *Table[E]) Upsert(entity E) error {
-	return t.Update(func(m map[string]E) map[string]E {
-		m[entity.ID()] = entity
-		return m
-	})
+func (t *Table[E]) Upsert(entity E) {
+	id := entity.ID()
+	t.data[id] = entity
 }
 
-// Delete entity by id. If entity with such id does not exist, does nothing.
-func (t *Table[E]) Delete(id string) error {
-	return t.Update(func(m map[string]E) map[string]E {
-		delete(m, id)
-		return m
-	})
+// Delete entity by id. If entity was not found, does nothing. Boolean indicates
+// whether entity was actually deleted.
+func (t *Table[E]) Delete(id string) bool {
+	_, present := t.data[id]
+	if present {
+		delete(t.data, id)
+		return true
+	}
+
+	return false
 }
 
-// DeleteBy - delete all entities for which filter returns true.
-func (t *Table[E]) DeleteBy(filter func(E) bool) error {
-	return t.Update(func(m map[string]E) map[string]E {
-		for id, entity := range m {
-			if filter(entity) {
-				delete(m, id)
-			}
+// DeleteBy - delete all entities for which filter returns true. Returns number
+// of deleted items.
+func (t *Table[E]) DeleteBy(filter func(E) bool) int {
+	deleted := 0
+	for id, entity := range t.data {
+		if filter(entity) {
+			delete(t.data, id)
+			deleted++
 		}
-		return m
-	})
+	}
+	return deleted
 }
