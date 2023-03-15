@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 var (
@@ -30,21 +31,31 @@ type Table[E Entity] struct {
 }
 
 func (t *Table[E]) ensureFileExists() error {
+	dir := filepath.Dir(t.filename)
+	if _, err := os.Stat(dir); err != nil {
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("failed checking directory %s: %w", dir, err)
+		}
+
+		if err := os.Mkdir(dir, 0755); err != nil {
+			return fmt.Errorf("failed creating directory %s: %w", dir, err)
+		}
+	}
+
 	if _, err := os.Stat(t.filename); err != nil {
 		if !os.IsNotExist(err) {
 			return fmt.Errorf("failed checking table file %s: %w", t.filename, err)
 		}
 
-		file, err := os.Create(t.filename)
+		file, err := os.OpenFile(t.filename, os.O_CREATE|os.O_RDWR, 0644)
 		if err != nil {
 			return fmt.Errorf("failed creating table file %s: %w", t.filename, err)
 		}
+		defer file.Close()
 
 		if _, err := file.Write([]byte("{}")); err != nil {
 			return fmt.Errorf("failed filling table file %s with inital data: %w", t.filename, err)
 		}
-
-		return file.Close()
 	}
 
 	return nil

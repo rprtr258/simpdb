@@ -19,7 +19,7 @@ func New(dir string) *DB {
 
 // GetTable for the entity E.
 func GetTable[E Entity](db *DB) *Table[E] {
-	var e Entity
+	var e E
 	entityName := e.TableName()
 	return &Table[E]{
 		filename: filepath.Join(db.dir, entityName),
