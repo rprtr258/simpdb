@@ -21,12 +21,18 @@ type Entity interface {
 
 // Table is access point for storage of one entity type.
 type Table[E Entity] struct {
-	storage jsonStorage[E]
+	storage *jsonStorage[E]
 }
 
 // func (t *Table[E]) Close() error {
 // 	return nil
 // }
+
+func newTable[E Entity](storage *jsonStorage[E]) (*Table[E], error) {
+	return &Table[E]{
+		storage: storage,
+	}, nil
+}
 
 // Update all records in table.
 func (t *Table[E]) Update(f func(map[string]E) map[string]E) error {

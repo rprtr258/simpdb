@@ -1,5 +1,7 @@
 package simpdb
 
+import "fmt"
+
 // DB handler for database directory
 type DB struct {
 	dir string
@@ -19,14 +21,14 @@ type TableConfig struct {
 }
 
 // GetTable for the entity E.
-func GetTable[E Entity](db *DB, config TableConfig) *Table[E] {
+func GetTable[E Entity](db *DB, config TableConfig) (*Table[E], error) {
 	var e E
 	entityName := e.TableName()
-	return &Table[E]{
-		storage: jsonStorage[E]{
-			dir:    db.dir,
-			name:   entityName,
-			intend: config.Indent,
-		},
+
+	storage, err := newJSONStorage[E](db.dir, entityName, config.Indent)
+	if err != nil {
+		return nil, fmt.Errorf("get table: %w", err)
 	}
+
+	return newTable(storage)
 }

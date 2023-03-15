@@ -15,45 +15,45 @@ type jsonStorage[E Entity] struct {
 	name string
 }
 
-func (t *jsonStorage[E]) ensureFileExists() error {
-	if _, err := os.Stat(t.dir); err != nil {
+func newJSONStorage[E Entity](dir, name string, indent bool) (*jsonStorage[E], error) {
+	if _, err := os.Stat(dir); err != nil {
 		if !os.IsNotExist(err) {
-			return fmt.Errorf("check directory %s: %w", t.dir, err)
+			return nil, fmt.Errorf("check directory %s: %w", dir, err)
 		}
 
 		// TODO: mkdirall
-		if err := os.Mkdir(t.dir, 0755); err != nil {
-			return fmt.Errorf("creat directory %s: %w", t.dir, err)
+		if err := os.Mkdir(dir, 0755); err != nil {
+			return nil, fmt.Errorf("creat directory %s: %w", dir, err)
 		}
 	}
 
-	filename := filepath.Join(t.dir, t.name)
+	filename := filepath.Join(dir, name)
 
 	if _, err := os.Stat(filename); err != nil {
 		if !os.IsNotExist(err) {
-			return fmt.Errorf("check table file %s: %w", filename, err)
+			return nil, fmt.Errorf("check table file %s: %w", filename, err)
 		}
 
 		file, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0644)
 		if err != nil {
-			return fmt.Errorf("create table file %s: %w", filename, err)
+			return nil, fmt.Errorf("create table file %s: %w", filename, err)
 		}
 		defer file.Close()
 
 		if _, err := file.Write([]byte("{}")); err != nil {
-			return fmt.Errorf("initialize table file %s: %w", filename, err)
+			return nil, fmt.Errorf("initialize table file %s: %w", filename, err)
 		}
 	}
 
-	return nil
+	return &jsonStorage[E]{
+		dir:    dir,
+		name:   name,
+		intend: indent,
+	}, nil
 }
 
 // Read all records from table that satisfy predicate.
 func (t *jsonStorage[E]) Read(filter func(E) bool) (map[string]E, error) {
-	if err := t.ensureFileExists(); err != nil {
-		return nil, fmt.Errorf("read: %w", err)
-	}
-
 	filename := filepath.Join(t.dir, t.name)
 
 	bytes, err := os.ReadFile(filename)
@@ -86,10 +86,6 @@ func (t *jsonStorage[E]) marshal(entities map[string]E) ([]byte, error) {
 
 // Write fills table with entities.
 func (t *jsonStorage[E]) Write(entities map[string]E) error {
-	if err := t.ensureFileExists(); err != nil {
-		return fmt.Errorf("write: %w", err)
-	}
-
 	bytes, err := t.marshal(entities)
 	if err != nil {
 		return fmt.Errorf("write, encode json: %w", err)
