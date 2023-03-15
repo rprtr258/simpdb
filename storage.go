@@ -9,10 +9,8 @@ import (
 
 type jsonStorage[E Entity] struct {
 	intend bool
-	// files directory
-	dir string
-	// name of table file
-	name string
+	// filename of table file
+	filename string
 }
 
 func newJSONStorage[E Entity](dir, tableName string, indent bool) (*jsonStorage[E], error) {
@@ -48,17 +46,14 @@ func newJSONStorage[E Entity](dir, tableName string, indent bool) (*jsonStorage[
 	}
 
 	return &jsonStorage[E]{
-		dir:    dir,
-		name:   basename,
-		intend: indent,
+		filename: filename,
+		intend:   indent,
 	}, nil
 }
 
 // Read all records from table that satisfy predicate.
-func (t *jsonStorage[E]) Read() (map[string]E, error) {
-	filename := filepath.Join(t.dir, t.name)
-
-	bytes, err := os.ReadFile(filename)
+func (s *jsonStorage[E]) Read() (map[string]E, error) {
+	bytes, err := os.ReadFile(s.filename)
 	if err != nil {
 		return nil, fmt.Errorf("read, read file: %w", err)
 	}
@@ -71,8 +66,8 @@ func (t *jsonStorage[E]) Read() (map[string]E, error) {
 	return res, nil
 }
 
-func (t *jsonStorage[E]) marshal(entities map[string]E) ([]byte, error) {
-	if t.intend {
+func (s *jsonStorage[E]) marshal(entities map[string]E) ([]byte, error) {
+	if s.intend {
 		return json.MarshalIndent(entities, "", "\t")
 	} else {
 		return json.Marshal(entities)
@@ -80,15 +75,13 @@ func (t *jsonStorage[E]) marshal(entities map[string]E) ([]byte, error) {
 }
 
 // Write fills table with entities.
-func (t *jsonStorage[E]) Write(entities map[string]E) error {
-	bytes, err := t.marshal(entities)
+func (s *jsonStorage[E]) Write(entities map[string]E) error {
+	bytes, err := s.marshal(entities)
 	if err != nil {
 		return fmt.Errorf("write, encode json: %w", err)
 	}
 
-	filename := filepath.Join(t.dir, t.name)
-
-	if err := os.WriteFile(filename, bytes, 0644); err != nil {
+	if err := os.WriteFile(s.filename, bytes, 0644); err != nil {
 		return fmt.Errorf("write, write file: %w", err)
 	}
 
