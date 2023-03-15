@@ -1,8 +1,6 @@
 package simpdb
 
-import (
-	"path/filepath"
-)
+import "fmt"
 
 // DB handler for database directory
 type DB struct {
@@ -17,12 +15,21 @@ func New(dir string) *DB {
 	}
 }
 
+type TableConfig struct {
+	// Indent indicates whether to do json indenting when writing file
+	Indent bool
+}
+
 // GetTable for the entity E.
-func GetTable[E Entity](db *DB) *Table[E] {
-	var e E
-	entityName := e.TableName()
-	return &Table[E]{
-		filename: filepath.Join(db.dir, entityName),
-		name:     entityName,
+func GetTable[E Entity](
+	db *DB,
+	tableName string,
+	config TableConfig,
+) (*Table[E], error) {
+	storage, err := newJSONStorage[E](db.dir, tableName, config.Indent)
+	if err != nil {
+		return nil, fmt.Errorf("get table: %w", err)
 	}
+
+	return newTable(storage)
 }
