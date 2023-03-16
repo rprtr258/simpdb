@@ -106,5 +106,34 @@ func main() {
 }
 ```
 
+## Method chaining
+
+```mermaid
+flowchart LR
+  T[Table]
+  MSE[map string E]
+  Q[select]
+  L[list]
+  T -->|Get id| r1[E,bool]
+  T -->|Insert E| bool
+  T -->|Upsert| r2[void]
+  T -->|DeleteByID id| bool
+  T --> Q
+  subgraph select
+    Q -->|All| MSE
+    Q -->|List| L
+    Q -->|Sort less| L
+    Q -->|Where filter| Q
+    Q -->|Delete| int
+    Q -->|Update fn| void
+    subgraph list
+        L -->|Sort less| L
+        L -->|All| sliceE
+        L -->|Min| E,bool
+        L -->|Max| E,bool
+    end
+  end
+```
+
 [doc-img]: https://pkg.go.dev/badge/github.com/rprtr258/simpdb
 [doc]: https://pkg.go.dev/github.com/rprtr258/simpdb
