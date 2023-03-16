@@ -30,7 +30,7 @@ func main() {
     users := users.List().All()
 
     // get user by id
-    user, ok := users.Get("Harry")
+    user := users.Get("Harry").Value
 
     // get all male users
     males := users.
@@ -100,7 +100,7 @@ func main() {
             return u
         })
     // or
-    user, ok := users.Get("Harry")
+    user := users.Get("Harry").Value
     user.Gender = false
     users.Upsert(user)
 }
@@ -113,9 +113,10 @@ flowchart LR
   T[Table]
   MSE[map string E]
   SE[slice E]
+  OE[Optional E]
   Q[select]
   L[list]
-  T -->|Get id| r1[E,bool]
+  T -->|Get id| r1[Optional E]
   T -->|Insert E| bool
   T -->|Upsert| r2[void]
   T -->|DeleteByID id| bool
@@ -131,8 +132,8 @@ flowchart LR
     subgraph list
         L -->|Sort less| L
         L -->|All| SE
-        L -->|Min| E,bool
-        L -->|Max| E,bool
+        L -->|Min| OE
+        L -->|Max| OE
     end
   end
 ```
