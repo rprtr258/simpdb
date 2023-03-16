@@ -41,10 +41,13 @@ func (t *Table[E]) Close() error {
 	return nil
 }
 
-// Get single record by id. If none found, false returned as second result.
-func (t *Table[E]) Get(id string) (E, bool) {
+// Get entity by id.
+func (t *Table[E]) Get(id string) Optional[E] {
 	res, ok := t.data[id]
-	return res, ok
+	return Optional[E]{
+		Value: res,
+		Valid: ok,
+	}
 }
 
 // Insert entity into database. If entity already present, does nothing and
@@ -60,10 +63,12 @@ func (t *Table[E]) Insert(entity E) bool {
 	return true
 }
 
-// Upsert - insert entity into database. If entity already present, overwrites it.
-func (t *Table[E]) Upsert(entity E) {
-	id := entity.ID()
-	t.data[id] = entity
+// Upsert - insert entities into database. If entities overlap, overrides old
+// one.
+func (t *Table[E]) Upsert(entities ...E) {
+	for _, entity := range entities {
+		t.data[entity.ID()] = entity
+	}
 }
 
 // DeleteByID - delete entity by id. If entity was not found, does nothing.
