@@ -57,7 +57,7 @@ func main() {
     didDelete := users.DeleteByID("Hermione")
 
     // delete all females
-    femalesCount := users.
+    femalesDeleted := users.
         Where(func(_ string, u User) bool {
             return !u.Gender
         }).
@@ -112,6 +112,7 @@ func main() {
 flowchart LR
   T[Table]
   MSE[map string E]
+  SE[slice E]
   Q[select]
   L[list]
   T -->|Get id| r1[E,bool]
@@ -124,11 +125,12 @@ flowchart LR
     Q -->|List| L
     Q -->|Sort less| L
     Q -->|Where filter| Q
-    Q -->|Delete| int
+    Q -->|Delete| SE
     Q -->|Update fn| void
+    Q -->|Count| int
     subgraph list
         L -->|Sort less| L
-        L -->|All| sliceE
+        L -->|All| SE
         L -->|Min| E,bool
         L -->|Max| E,bool
     end

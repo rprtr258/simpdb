@@ -42,9 +42,12 @@ func (t *Table[E]) Close() error {
 }
 
 // Get single record by id. If none found, false returned as second result.
-func (t *Table[E]) Get(id string) (E, bool) {
+func (t *Table[E]) Get(id string) Optional[E] {
 	res, ok := t.data[id]
-	return res, ok
+	return Optional[E]{
+		Value: res,
+		Valid: ok,
+	}
 }
 
 // Insert entity into database. If entity already present, does nothing and

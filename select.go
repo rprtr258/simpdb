@@ -45,16 +45,27 @@ func (q selectQuery[E]) Where(filter func(string, E) bool) selectQuery[E] {
 	}
 }
 
-// Delete - delete all filtered entities. Returns number of deleted items.
-func (q selectQuery[E]) Delete() int {
-	deleted := 0
+// Delete - delete all filtered entities. Returns IDs of deleted items.
+func (q selectQuery[E]) Delete() []E {
+	deleted := []E{}
 	for id, entity := range q.data {
 		if q.filter(id, entity) {
 			delete(q.data, id)
-			deleted++
+			deleted = append(deleted, entity)
 		}
 	}
 	return deleted
+}
+
+// Count entities matching filter.
+func (q selectQuery[E]) Count() int {
+	res := 0
+	for id, entity := range q.data {
+		if q.filter(id, entity) {
+			res++
+		}
+	}
+	return res
 }
 
 // Update entities using fn function.

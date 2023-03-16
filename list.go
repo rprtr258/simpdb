@@ -16,7 +16,7 @@ func (q listQuery[E]) Sort(less func(E, E) bool) listQuery[E] {
 }
 
 // Min - get minimal/first entitiy in list. If none, boolean is false.
-func (q listQuery[E]) Min() (E, bool) {
+func (q listQuery[E]) Min() Optional[E] {
 	atLeastOneFound := false
 	var min E
 	for id, entity := range q.data {
@@ -31,14 +31,17 @@ func (q listQuery[E]) Min() (E, bool) {
 	}
 
 	if !atLeastOneFound {
-		return min, false
+		return Optional[E]{}
 	}
 
-	return min, true
+	return Optional[E]{
+		Value: min,
+		Valid: true,
+	}
 }
 
 // Max - get maximum/last entitiy in list. If none, boolean is false.
-func (q listQuery[E]) Max() (E, bool) {
+func (q listQuery[E]) Max() Optional[E] {
 	atLeastOneFound := false
 	var max E
 	for id, entity := range q.data {
@@ -53,10 +56,13 @@ func (q listQuery[E]) Max() (E, bool) {
 	}
 
 	if !atLeastOneFound {
-		return max, false
+		return Optional[E]{}
 	}
 
-	return max, true
+	return Optional[E]{
+		Value: max,
+		Valid: true,
+	}
 }
 
 // All - get all entities in list.
