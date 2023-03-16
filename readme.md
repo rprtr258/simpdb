@@ -118,7 +118,7 @@ flowchart LR
   L[list]
   T -->|Get id| r1[Optional E]
   T -->|Insert E| bool
-  T -->|Upsert| r2[void]
+  T -->|Upsert Es| r2[void]
   T -->|DeleteByID id| bool
   T --> Q
   subgraph select

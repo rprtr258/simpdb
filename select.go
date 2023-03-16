@@ -5,7 +5,8 @@ type selectQuery[E Entity] struct {
 	filter func(string, E) bool
 }
 
-// Iter over selected entities. fn accepts ID and entity.
+// Iter over selected entities. fn accepts ID and entity. There are no order
+// guarantees.
 func (q selectQuery[E]) Iter(fn func(string, E)) {
 	for id, entity := range q.data {
 		if q.filter(id, entity) {
