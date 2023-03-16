@@ -21,7 +21,7 @@ func main() {
     db := simpdb.New("db")
 
     users, _ := simpdb.GetTable[User](db, "users", simpdb.TableConfig{})
-    defer users.Close()
+    defer users.Flush()
 
     // get all users as map name -> user
     users := users.All()
@@ -52,6 +52,9 @@ func main() {
         Gender: false,
         Age: 19,
     })
+
+    // flush file to disk
+    _ = users.Flush()
 
     // delete user by id
     didDelete := users.DeleteByID("Hermione")

@@ -32,10 +32,10 @@ func newTable[E Entity](storage *jsonStorage[E]) (*Table[E], error) {
 	}, nil
 }
 
-// Close table, dumps updated data to file.
-func (t *Table[E]) Close() error {
+// Flush table, dumps updated data to file.
+func (t *Table[E]) Flush() error {
 	if err := t.storage.Write(t.selectQuery.data); err != nil {
-		return fmt.Errorf("close table: %w", err)
+		return fmt.Errorf("flush table: %w", err)
 	}
 
 	return nil
