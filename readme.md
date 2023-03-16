@@ -129,11 +129,13 @@ flowchart LR
     Q -->|Delete| SE
     Q -->|Update fn| void
     Q -->|Count| int
+    Q -->|Iter| r3[void]
     subgraph list
         L -->|Sort less| L
         L -->|All| SE
         L -->|Min| OE
         L -->|Max| OE
+        L -->|Iter| r4[void]
     end
   end
 ```

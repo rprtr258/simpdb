@@ -41,7 +41,7 @@ func (t *Table[E]) Close() error {
 	return nil
 }
 
-// Get single record by id. If none found, false returned as second result.
+// Get entity by id.
 func (t *Table[E]) Get(id string) Optional[E] {
 	res, ok := t.data[id]
 	return Optional[E]{

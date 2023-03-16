@@ -102,7 +102,7 @@ func ExampleNew() {
 			return u
 		})
 	// or
-	user, _ := users.Get("Harry")
+	user := users.Get("Harry").Value
 	user.Gender = false
 	users.Upsert(user)
 }
