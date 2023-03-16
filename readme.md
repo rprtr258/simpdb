@@ -30,7 +30,7 @@ func main() {
     users := users.List().All()
 
     // get user by id
-    user, ok := users.Get("Harry")
+    user := users.Get("Harry").Value
 
     // get all male users
     males := users.
@@ -57,7 +57,7 @@ func main() {
     didDelete := users.DeleteByID("Hermione")
 
     // delete all females
-    femalesCount := users.
+    femalesDeleted := users.
         Where(func(_ string, u User) bool {
             return !u.Gender
         }).
@@ -84,11 +84,10 @@ func main() {
         Max()
 
     // make everyone female
-    users.
-        Update(func(u User) User {
-            u.Gender = false
-            return u
-        })
+    users.Update(func(u User) User {
+        u.Gender = false
+        return u
+    })
 
     // update single person
     users.
@@ -100,7 +99,7 @@ func main() {
             return u
         })
     // or
-    user, ok := users.Get("Harry")
+    user := users.Get("Harry").Value
     user.Gender = false
     users.Upsert(user)
 }
@@ -112,11 +111,13 @@ func main() {
 flowchart LR
   T[Table]
   MSE[map string E]
+  SE[slice E]
+  OE[Optional E]
   Q[select]
   L[list]
-  T -->|Get id| r1[E,bool]
+  T -->|Get id| r1[Optional E]
   T -->|Insert E| bool
-  T -->|Upsert| r2[void]
+  T -->|Upsert Es| r2[void]
   T -->|DeleteByID id| bool
   T --> Q
   subgraph select
@@ -124,13 +125,16 @@ flowchart LR
     Q -->|List| L
     Q -->|Sort less| L
     Q -->|Where filter| Q
-    Q -->|Delete| int
+    Q -->|Delete| SE
     Q -->|Update fn| void
+    Q -->|Count| int
+    Q -->|Iter| r3[void]
     subgraph list
         L -->|Sort less| L
-        L -->|All| sliceE
-        L -->|Min| E,bool
-        L -->|Max| E,bool
+        L -->|All| SE
+        L -->|Min| OE
+        L -->|Max| OE
+        L -->|Iter| r4[void]
     end
   end
 ```
