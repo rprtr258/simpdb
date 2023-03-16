@@ -5,12 +5,15 @@ type selectQuery[E Entity] struct {
 	filter func(string, E) bool
 }
 
-// Iter over selected entities. fn accepts ID and entity. There are no order
+// Iter over selected entities. fn accepts ID and entity and returns whether
+// iteration should continue. There are no order
 // guarantees.
-func (q selectQuery[E]) Iter(fn func(string, E)) {
+func (q selectQuery[E]) Iter(fn func(string, E) bool) {
 	for id, entity := range q.data {
 		if q.filter(id, entity) {
-			fn(id, entity)
+			if !fn(id, entity) {
+				return
+			}
 		}
 	}
 }
@@ -18,8 +21,9 @@ func (q selectQuery[E]) Iter(fn func(string, E)) {
 // All - get records in table.
 func (q selectQuery[E]) All() map[string]E {
 	res := make(map[string]E)
-	q.Iter(func(id string, entity E) {
+	q.Iter(func(id string, entity E) bool {
 		res[id] = entity
+		return true
 	})
 	return res
 }
@@ -56,9 +60,10 @@ func (q selectQuery[E]) Where(filter func(string, E) bool) selectQuery[E] {
 // Delete - delete all filtered entities. Returns IDs of deleted items.
 func (q selectQuery[E]) Delete() []E {
 	deleted := []E{}
-	q.Iter(func(id string, entity E) {
+	q.Iter(func(id string, entity E) bool {
 		delete(q.data, id)
 		deleted = append(deleted, entity)
+		return true
 	})
 	return deleted
 }
@@ -66,20 +71,22 @@ func (q selectQuery[E]) Delete() []E {
 // Count entities matching filter.
 func (q selectQuery[E]) Count() int {
 	res := 0
-	q.Iter(func(string, E) {
+	q.Iter(func(string, E) bool {
 		res++
+		return true
 	})
 	return res
 }
 
 // Update entities using fn function.
 func (q selectQuery[E]) Update(fn func(E) E) {
-	q.Iter(func(id string, entity E) {
+	q.Iter(func(id string, entity E) bool {
 		newEntity := fn(entity)
 		newID := newEntity.ID()
 		if id != newID {
 			delete(q.data, id)
 		}
 		q.data[newID] = newEntity
+		return true
 	})
 }
