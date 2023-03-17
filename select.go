@@ -25,6 +25,7 @@ func (q selectQuery[E]) All() map[string]E {
 		res[id] = entity
 		return true
 	})
+
 	return res
 }
 
@@ -65,6 +66,7 @@ func (q selectQuery[E]) Delete() []E {
 		deleted = append(deleted, entity)
 		return true
 	})
+
 	return deleted
 }
 
@@ -75,6 +77,7 @@ func (q selectQuery[E]) Count() int {
 		res++
 		return true
 	})
+
 	return res
 }
 
@@ -87,6 +90,7 @@ func (q selectQuery[E]) Update(fn func(E) E) {
 			delete(q.data, id)
 		}
 		q.data[newID] = newEntity
+
 		return true
 	})
 }

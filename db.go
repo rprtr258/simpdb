@@ -2,7 +2,7 @@ package simpdb
 
 import "fmt"
 
-// DB handler for database directory
+// DB handler for database directory.
 type DB struct {
 	dir string
 }

@@ -8,9 +8,9 @@ import (
 )
 
 type jsonStorage[E Entity] struct {
-	intend bool
 	// filename of table file
 	filename string
+	intend   bool
 }
 
 func newJSONStorage[E Entity](dir, tableName string, indent bool) (*jsonStorage[E], error) {
@@ -34,7 +34,7 @@ func newJSONStorage[E Entity](dir, tableName string, indent bool) (*jsonStorage[
 			return nil, fmt.Errorf("check table file %s: %w", filename, err)
 		}
 
-		file, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0644)
+		file, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0600)
 		if err != nil {
 			return nil, fmt.Errorf("create table file %s: %w", filename, err)
 		}
@@ -68,20 +68,30 @@ func (s *jsonStorage[E]) Read() (map[string]E, error) {
 
 func (s *jsonStorage[E]) marshal(entities map[string]E) ([]byte, error) {
 	if s.intend {
-		return json.MarshalIndent(entities, "", "\t")
-	} else {
-		return json.Marshal(entities)
+		res, err := json.MarshalIndent(entities, "", "\t")
+		if err != nil {
+			return nil, fmt.Errorf("write, encode intended json: %w", err)
+		}
+
+		return res, nil
 	}
+
+	res, err := json.Marshal(entities)
+	if err != nil {
+		return nil, fmt.Errorf("write, encode intended json: %w", err)
+	}
+
+	return res, nil
 }
 
 // Write fills table with entities.
 func (s *jsonStorage[E]) Write(entities map[string]E) error {
 	bytes, err := s.marshal(entities)
 	if err != nil {
-		return fmt.Errorf("write, encode json: %w", err)
+		return err
 	}
 
-	if err := os.WriteFile(s.filename, bytes, 0644); err != nil {
+	if err := os.WriteFile(s.filename, bytes, 0600); err != nil {
 		return fmt.Errorf("write, write file: %w", err)
 	}
 

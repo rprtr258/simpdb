@@ -7,7 +7,7 @@ type listQuery[E Entity] struct {
 	less func(E, E) bool
 }
 
-// iter over list of entities no order guranteed. fn accepts ID and entity and
+// iter over list of entities no order guaranteed. fn accepts ID and entity and
 // returns whether iteration should continue.
 func (q listQuery[E]) iter(fn func(string, E) bool) {
 	for id, entity := range q.data {
@@ -21,7 +21,7 @@ func (q listQuery[E]) iter(fn func(string, E) bool) {
 
 // Iter over list of entities in sorted order. fn accepts ID and entity and
 // returns whether iteration should continue.
-func (q listQuery[E]) Iter(fn func(string, E) bool) {
+func (q listQuery[E]) Iter(iteratee func(string, E) bool) {
 	res := make([]E, 0, len(q.data))
 	q.iter(func(_ string, entity E) bool {
 		res = append(res, entity)
@@ -33,7 +33,7 @@ func (q listQuery[E]) Iter(fn func(string, E) bool) {
 	for _, entity := range res {
 		id := entity.ID()
 		if q.filter(id, entity) {
-			if !fn(id, entity) {
+			if !iteratee(id, entity) {
 				return
 			}
 		}
@@ -59,6 +59,7 @@ func (q listQuery[E]) Min() Optional[E] {
 		} else if q.less(entity, min) {
 			min = entity
 		}
+
 		return true
 	})
 
@@ -83,6 +84,7 @@ func (q listQuery[E]) Max() Optional[E] {
 		} else if q.less(max, entity) {
 			max = entity
 		}
+
 		return true
 	})
 
@@ -106,5 +108,6 @@ func (q listQuery[E]) All() []E {
 	sort.Slice(res, func(i, j int) bool {
 		return q.less(res[i], res[j])
 	})
+
 	return res
 }

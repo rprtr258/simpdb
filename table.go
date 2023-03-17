@@ -53,13 +53,14 @@ func (t *Table[E]) Get(id string) Optional[E] {
 // Insert entity into database. If entity already present, does nothing and
 // returns false.
 func (t *Table[E]) Insert(entity E) bool {
-	id := entity.ID()
-	_, alreadyPresent := t.data[id]
+	entityID := entity.ID()
+	_, alreadyPresent := t.data[entityID]
 	if alreadyPresent {
 		return false
 	}
 
-	t.data[id] = entity
+	t.data[entityID] = entity
+
 	return true
 }
 
