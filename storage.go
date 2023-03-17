@@ -22,7 +22,7 @@ func newJSONStorage[E Entity](dir, tableName string, indent bool) (*jsonStorage[
 		}
 
 		// TODO: mkdirall
-		if err := os.Mkdir(dir, 0755); err != nil {
+		if err := os.Mkdir(dir, 0o755); err != nil {
 			return nil, fmt.Errorf("creat directory %s: %w", dir, err)
 		}
 	}
@@ -34,7 +34,7 @@ func newJSONStorage[E Entity](dir, tableName string, indent bool) (*jsonStorage[
 			return nil, fmt.Errorf("check table file %s: %w", filename, err)
 		}
 
-		file, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0600)
+		file, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0o600)
 		if err != nil {
 			return nil, fmt.Errorf("create table file %s: %w", filename, err)
 		}
@@ -91,7 +91,7 @@ func (s *jsonStorage[E]) Write(entities map[string]E) error {
 		return err
 	}
 
-	if err := os.WriteFile(s.filename, bytes, 0600); err != nil {
+	if err := os.WriteFile(s.filename, bytes, 0o600); err != nil {
 		return fmt.Errorf("write, write file: %w", err)
 	}
 
