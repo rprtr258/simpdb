@@ -1,6 +1,9 @@
 package simpdb
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+)
 
 // DB handler for database directory.
 type DB struct {
@@ -18,6 +21,11 @@ func New(dir string) *DB {
 type TableConfig struct {
 	// Indent indicates whether to do json indenting when writing file
 	Indent bool
+}
+
+type Storage[E Entity] interface {
+	Read(io.Reader) (map[string]E, error)
+	Write(io.Writer, map[string]E) error
 }
 
 // GetTable for the entity E.
