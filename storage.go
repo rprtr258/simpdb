@@ -17,9 +17,13 @@ func (f FuncStorageConfig[E]) Build(dir, tableName string) Storage[E] {
 	return f(dir, tableName)
 }
 
+// Storage - interface for writing and reading table storages.
 type Storage[E Entity] interface {
+	// Filename of table file.
 	Filename() string
+	// Read table data from reader.
 	Read(io.Reader) (map[string]E, error)
+	// Write data to writer.
 	Write(io.Writer, map[string]E) error
 }
 
