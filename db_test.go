@@ -108,6 +108,7 @@ func ExampleNew() {
 		})
 	// or
 	user := users.Get("Harry").Value
+	users.DeleteByID(user.ID()) // if ID might be changed
 	user.Gender = false
 	users.Upsert(user)
 }
