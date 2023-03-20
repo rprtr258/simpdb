@@ -20,9 +20,8 @@ func (u User) ID() string {
 func ExampleNew() {
 	db := simpdb.New("db")
 
-	users, _ := simpdb.GetTable[User](db, "users", simpdb.TableConfig{
-		Indent: true,
-	})
+	jsonStorage, _ := simpdb.NewJSONStorage[User]("db", "users", true)
+	users, _ := simpdb.GetTable(db, "users", jsonStorage)
 	defer users.Flush()
 
 	// get all users as map name -> user

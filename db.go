@@ -1,7 +1,6 @@
 package simpdb
 
 import (
-	"fmt"
 	"io"
 )
 
@@ -24,6 +23,7 @@ type TableConfig struct {
 }
 
 type Storage[E Entity] interface {
+	Filename() string
 	Read(io.Reader) (map[string]E, error)
 	Write(io.Writer, map[string]E) error
 }
@@ -32,12 +32,12 @@ type Storage[E Entity] interface {
 func GetTable[E Entity](
 	db *DB,
 	tableName string,
-	config TableConfig,
+	storage Storage[E],
 ) (*Table[E], error) {
-	storage, err := newJSONStorage[E](db.dir, tableName, config.Indent)
-	if err != nil {
-		return nil, fmt.Errorf("get table: %w", err)
-	}
+	// storage, err := newJSONStorage[E](db.dir, tableName, config.Indent)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("get table: %w", err)
+	// }
 
 	return newTable(storage)
 }

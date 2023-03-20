@@ -14,11 +14,11 @@ type Entity interface {
 // Table is access point for storage of one entity type.
 type Table[E Entity] struct {
 	selectQuery[E]
-	storage *jsonStorage[E]
+	storage Storage[E]
 }
 
-func newTable[E Entity](storage *jsonStorage[E]) (*Table[E], error) {
-	data, err := storage.Read()
+func newTable[E Entity](storage Storage[E]) (*Table[E], error) {
+	data, err := Read(storage)
 	if err != nil {
 		return nil, fmt.Errorf("new table: %w", err)
 	}
@@ -34,7 +34,7 @@ func newTable[E Entity](storage *jsonStorage[E]) (*Table[E], error) {
 
 // Flush table, dumps updated data to file.
 func (t *Table[E]) Flush() error {
-	if err := t.storage.Write(t.selectQuery.data); err != nil {
+	if err := write(t.storage, t.selectQuery.data); err != nil {
 		return fmt.Errorf("flush table: %w", err)
 	}
 
