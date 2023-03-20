@@ -10,13 +10,8 @@ import (
 	"github.com/rprtr258/simpdb"
 )
 
-type yamlStorage[E simpdb.Entity] struct {
-	// filename of table file
-	filename string
-}
-
-func (s *yamlStorage[E]) Filename() string {
-	return s.filename
+type yamlStorage[E Entity] struct {
+	tableFilename
 }
 
 func (s *yamlStorage[E]) Read(r io.Reader) (map[string]E, error) {
@@ -36,14 +31,11 @@ func (s *yamlStorage[E]) Write(w io.Writer, entities map[string]E) error {
 	return nil
 }
 
-type yamlStorageConfig[E simpdb.Entity] struct{}
-
-func NewYAMLStorage[E simpdb.Entity]() simpdb.StorageConfig[E] {
-	return yamlStorageConfig[E]{}
-}
-
-func (c yamlStorageConfig[E]) Build(dir, tableName string) simpdb.Storage[E] {
-	return &yamlStorage[E]{
-		filename: filepath.Join(dir, tableName+".json"),
-	}
+func NewYAMLStorage[E Entity]() simpdb.StorageConfig[E] {
+	return simpdb.FuncStorageConfig[E](
+		func(dir, tableName string) simpdb.Storage[E] {
+			filename := filepath.Join(dir, tableName+".yaml")
+			return &yamlStorage[E]{tableFilename(filename)}
+		},
+	)
 }

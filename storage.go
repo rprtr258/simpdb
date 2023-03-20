@@ -11,6 +11,12 @@ type StorageConfig[E Entity] interface {
 	Build(dir, tableName string) Storage[E]
 }
 
+type FuncStorageConfig[E Entity] func(dir, tableName string) Storage[E]
+
+func (f FuncStorageConfig[E]) Build(dir, tableName string) Storage[E] {
+	return f(dir, tableName)
+}
+
 type Storage[E Entity] interface {
 	Filename() string
 	Read(io.Reader) (map[string]E, error)

@@ -9,18 +9,13 @@ import (
 	"github.com/rprtr258/simpdb"
 )
 
-type jsonIndentStorage[E simpdb.Entity] struct {
-	// filename of table file
-	filename string
-}
-
-func (s *jsonIndentStorage[E]) Filename() string {
-	return s.filename
+type jsonIndentStorage[E Entity] struct {
+	tableFilename
 }
 
 func (s *jsonIndentStorage[E]) Read(r io.Reader) (map[string]E, error) {
-	var res map[string]E
-	if err := json.NewDecoder(r).Decode(&res); err != nil {
+	res, err := jsonDecode[E](r)
+	if err != nil {
 		return nil, fmt.Errorf("indent json storage decode: %w", err)
 	}
 
@@ -37,14 +32,11 @@ func (s *jsonIndentStorage[E]) Write(w io.Writer, entities map[string]E) error {
 	return nil
 }
 
-type jsonIndentStorageConfig[E simpdb.Entity] struct{}
-
-func NewJSONIndentStorage[E simpdb.Entity]() simpdb.StorageConfig[E] {
-	return jsonIndentStorageConfig[E]{}
-}
-
-func (c jsonIndentStorageConfig[E]) Build(dir, tableName string) simpdb.Storage[E] {
-	return &jsonIndentStorage[E]{
-		filename: filepath.Join(dir, tableName+".json"),
-	}
+func NewJSONIndentStorage[E Entity]() simpdb.StorageConfig[E] {
+	return simpdb.FuncStorageConfig[E](
+		func(dir, tableName string) simpdb.Storage[E] {
+			filename := filepath.Join(dir, tableName+".json")
+			return &jsonIndentStorage[E]{tableFilename(filename)}
+		},
+	)
 }

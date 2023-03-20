@@ -9,18 +9,13 @@ import (
 	"github.com/rprtr258/simpdb"
 )
 
-type jsonStorage[E simpdb.Entity] struct {
-	// filename of table file
-	filename string
-}
-
-func (s *jsonStorage[E]) Filename() string {
-	return s.filename
+type jsonStorage[E Entity] struct {
+	tableFilename
 }
 
 func (s *jsonStorage[E]) Read(r io.Reader) (map[string]E, error) {
-	var res map[string]E
-	if err := json.NewDecoder(r).Decode(&res); err != nil {
+	res, err := jsonDecode[E](r)
+	if err != nil {
 		return nil, fmt.Errorf("json storage decode: %w", err)
 	}
 
@@ -35,14 +30,11 @@ func (s *jsonStorage[E]) Write(w io.Writer, entities map[string]E) error {
 	return nil
 }
 
-type jsonStorageConfig[E simpdb.Entity] struct{}
-
-func NewJSONStorage[E simpdb.Entity]() simpdb.StorageConfig[E] {
-	return jsonStorageConfig[E]{}
-}
-
-func (c jsonStorageConfig[E]) Build(dir, tableName string) simpdb.Storage[E] {
-	return &jsonStorage[E]{
-		filename: filepath.Join(dir, tableName+".json"),
-	}
+func NewJSONStorage[E Entity]() simpdb.StorageConfig[E] {
+	return simpdb.FuncStorageConfig[E](
+		func(dir, tableName string) simpdb.Storage[E] {
+			filename := filepath.Join(dir, tableName+".json")
+			return &jsonStorage[E]{tableFilename(filename)}
+		},
+	)
 }
