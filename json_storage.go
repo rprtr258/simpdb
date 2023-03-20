@@ -14,17 +14,6 @@ type jsonStorage[E Entity] struct {
 	intend   bool
 }
 
-func NewJSONStorage[E Entity](dir, tableName string, indent bool) (Storage[E], error) {
-	basename := tableName + ".json"
-
-	filename := filepath.Join(dir, basename)
-
-	return &jsonStorage[E]{
-		filename: filename,
-		intend:   indent,
-	}, nil
-}
-
 func (s *jsonStorage[E]) Filename() string {
 	return s.filename
 }
@@ -79,30 +68,6 @@ func (s *jsonStorage[E]) Write(w io.Writer, entities map[string]E) error {
 	return nil
 }
 
-// Read all records from table file.
-func Read[E Entity](storage Storage[E]) (map[string]E, error) {
-	if err := ensureFile(storage.Filename()); err != nil {
-		var e Entity
-		return nil, fmt.Errorf(
-			"read, check %T table file %q: %w",
-			e, storage.Filename(),
-			err,
-		)
-	}
-
-	f, err := os.Open(storage.Filename())
-	if err != nil {
-		return nil, fmt.Errorf("read, open file %q: %w", storage.Filename(), err)
-	}
-
-	res, err := storage.Read(f)
-	if err != nil {
-		return nil, fmt.Errorf("read entities: %w", err)
-	}
-
-	return res, nil
-}
-
 // func (s *jsonStorage[E]) marshal(entities map[string]E) ([]byte, error) {
 // 	if s.intend {
 // 		res, err := json.MarshalIndent(entities, "", "\t")
@@ -121,26 +86,20 @@ func Read[E Entity](storage Storage[E]) (map[string]E, error) {
 // 	return res, nil
 // }
 
-// write all entities to table file.
-func write[E Entity](storage Storage[E], entities map[string]E) error {
-	if err := ensureFile(storage.Filename()); err != nil {
-		var e Entity
-		return fmt.Errorf(
-			"write, check %T table file %q: %w",
-			e, storage.Filename(),
-			err,
-		)
-	}
+type jsonStorageConfig[E Entity] struct {
+	// indent indicates whether to do json indenting when encoding entities
+	indent bool
+}
 
-	file, err := os.Create(storage.Filename())
-	if err != nil {
-		return fmt.Errorf("write, recreate file: %w", err)
+func NewJSONStorage[E Entity](indent bool) StorageConfig[E] {
+	return jsonStorageConfig[E]{
+		indent: indent,
 	}
-	defer file.Close()
+}
 
-	if err := storage.Write(file, entities); err != nil {
-		return fmt.Errorf("write entities: %w", err)
+func (c jsonStorageConfig[E]) Build(dir, tableName string) Storage[E] {
+	return &jsonStorage[E]{
+		filename: filepath.Join(dir, tableName+".json"),
+		intend:   c.indent,
 	}
-
-	return nil
 }

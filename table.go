@@ -18,7 +18,7 @@ type Table[E Entity] struct {
 }
 
 func newTable[E Entity](storage Storage[E]) (*Table[E], error) {
-	data, err := Read(storage)
+	data, err := read(storage)
 	if err != nil {
 		return nil, fmt.Errorf("new table: %w", err)
 	}
