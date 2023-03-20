@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/rprtr258/simpdb"
+	"github.com/rprtr258/simpdb/storages"
 )
 
 type User struct {
@@ -22,7 +23,7 @@ func ExampleNew() {
 
 	users, _ := simpdb.GetTable(
 		db, "users",
-		simpdb.NewJSONStorage[User](true),
+		storages.NewJSONStorage[User](true),
 	)
 	defer users.Flush()
 

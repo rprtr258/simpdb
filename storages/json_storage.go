@@ -1,14 +1,15 @@
-package simpdb
+package storages
 
 import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
+
+	"github.com/rprtr258/simpdb"
 )
 
-type jsonStorage[E Entity] struct {
+type jsonStorage[E simpdb.Entity] struct {
 	// filename of table file
 	filename string
 	intend   bool
@@ -16,39 +17,6 @@ type jsonStorage[E Entity] struct {
 
 func (s *jsonStorage[E]) Filename() string {
 	return s.filename
-}
-
-func ensureFile(filename string) error {
-	dir := filepath.Dir(filename)
-
-	if _, err := os.Stat(dir); err != nil {
-		if !os.IsNotExist(err) {
-			return fmt.Errorf("check directory %s: %w", dir, err)
-		}
-
-		// TODO: mkdirall
-		if err := os.Mkdir(dir, 0o755); err != nil {
-			return fmt.Errorf("create directory %s: %w", dir, err)
-		}
-	}
-
-	if _, err := os.Stat(filename); err != nil {
-		if !os.IsNotExist(err) {
-			return fmt.Errorf("check table file %s: %w", filename, err)
-		}
-
-		file, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0o600)
-		if err != nil {
-			return fmt.Errorf("create table file %s: %w", filename, err)
-		}
-		defer file.Close()
-
-		if _, err := file.Write([]byte("{}")); err != nil {
-			return fmt.Errorf("initialize table file %s: %w", filename, err)
-		}
-	}
-
-	return nil
 }
 
 func (s *jsonStorage[E]) Read(r io.Reader) (map[string]E, error) {
@@ -86,18 +54,18 @@ func (s *jsonStorage[E]) Write(w io.Writer, entities map[string]E) error {
 // 	return res, nil
 // }
 
-type jsonStorageConfig[E Entity] struct {
+type jsonStorageConfig[E simpdb.Entity] struct {
 	// indent indicates whether to do json indenting when encoding entities
 	indent bool
 }
 
-func NewJSONStorage[E Entity](indent bool) StorageConfig[E] {
+func NewJSONStorage[E simpdb.Entity](indent bool) simpdb.StorageConfig[E] {
 	return jsonStorageConfig[E]{
 		indent: indent,
 	}
 }
 
-func (c jsonStorageConfig[E]) Build(dir, tableName string) Storage[E] {
+func (c jsonStorageConfig[E]) Build(dir, tableName string) simpdb.Storage[E] {
 	return &jsonStorage[E]{
 		filename: filepath.Join(dir, tableName+".json"),
 		intend:   c.indent,

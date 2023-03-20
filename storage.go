@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 type StorageConfig[E Entity] interface {
@@ -14,6 +15,39 @@ type Storage[E Entity] interface {
 	Filename() string
 	Read(io.Reader) (map[string]E, error)
 	Write(io.Writer, map[string]E) error
+}
+
+func ensureFile(filename string) error {
+	dir := filepath.Dir(filename)
+
+	if _, err := os.Stat(dir); err != nil {
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("check directory %s: %w", dir, err)
+		}
+
+		// TODO: mkdirall
+		if err := os.Mkdir(dir, 0o755); err != nil {
+			return fmt.Errorf("create directory %s: %w", dir, err)
+		}
+	}
+
+	if _, err := os.Stat(filename); err != nil {
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("check table file %s: %w", filename, err)
+		}
+
+		file, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0o600)
+		if err != nil {
+			return fmt.Errorf("create table file %s: %w", filename, err)
+		}
+		defer file.Close()
+
+		if _, err := file.Write([]byte("{}")); err != nil {
+			return fmt.Errorf("initialize table file %s: %w", filename, err)
+		}
+	}
+
+	return nil
 }
 
 // read all records from table file.
