@@ -1,48 +1,49 @@
 package storages
 
-// import (
-// 	"encoding/json"
-// 	"fmt"
-// 	"io"
-// 	"path/filepath"
+import (
+	"fmt"
+	"io"
+	"path/filepath"
 
-// 	"github.com/rprtr258/simpdb"
-// )
+	"gopkg.in/yaml.v3"
 
-// type jsonStorage[E simpdb.Entity] struct {
-// 	// filename of table file
-// 	filename string
-// }
+	"github.com/rprtr258/simpdb"
+)
 
-// func (s *jsonStorage[E]) Filename() string {
-// 	return s.filename
-// }
+type yamlStorage[E simpdb.Entity] struct {
+	// filename of table file
+	filename string
+}
 
-// func (s *jsonStorage[E]) Read(r io.Reader) (map[string]E, error) {
-// 	var res map[string]E
-// 	if err := json.NewDecoder(r).Decode(&res); err != nil {
-// 		return nil, fmt.Errorf("json storage decode: %w", err)
-// 	}
+func (s *yamlStorage[E]) Filename() string {
+	return s.filename
+}
 
-// 	return res, nil
-// }
+func (s *yamlStorage[E]) Read(r io.Reader) (map[string]E, error) {
+	var res map[string]E
+	if err := yaml.NewDecoder(r).Decode(&res); err != nil {
+		return nil, fmt.Errorf("json storage decode: %w", err)
+	}
 
-// func (s *jsonStorage[E]) Write(w io.Writer, entities map[string]E) error {
-// 	if err := json.NewEncoder(w).Encode(entities); err != nil {
-// 		return fmt.Errorf("json storage encode: %w", err)
-// 	}
+	return res, nil
+}
 
-// 	return nil
-// }
+func (s *yamlStorage[E]) Write(w io.Writer, entities map[string]E) error {
+	if err := yaml.NewEncoder(w).Encode(entities); err != nil {
+		return fmt.Errorf("json storage encode: %w", err)
+	}
 
-// type jsonStorageConfig[E simpdb.Entity] struct{}
+	return nil
+}
 
-// func NewJSONStorage[E simpdb.Entity]() simpdb.StorageConfig[E] {
-// 	return jsonStorageConfig[E]{}
-// }
+type yamlStorageConfig[E simpdb.Entity] struct{}
 
-// func (c jsonStorageConfig[E]) Build(dir, tableName string) simpdb.Storage[E] {
-// 	return &jsonStorage[E]{
-// 		filename: filepath.Join(dir, tableName+".json"),
-// 	}
-// }
+func NewYAMLStorage[E simpdb.Entity]() simpdb.StorageConfig[E] {
+	return yamlStorageConfig[E]{}
+}
+
+func (c yamlStorageConfig[E]) Build(dir, tableName string) simpdb.Storage[E] {
+	return &yamlStorage[E]{
+		filename: filepath.Join(dir, tableName+".json"),
+	}
+}
