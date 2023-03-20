@@ -27,7 +27,8 @@ type Storage[E Entity] interface {
 	Write(io.Writer, map[string]E) error
 }
 
-func ensureFile(filename string) error {
+func ensureFile[E Entity](storage Storage[E]) error {
+	filename := storage.Filename()
 	dir := filepath.Dir(filename)
 
 	if _, err := os.Stat(dir); err != nil {
@@ -52,7 +53,7 @@ func ensureFile(filename string) error {
 		}
 		defer file.Close()
 
-		if _, err := file.Write([]byte("{}")); err != nil {
+		if err := storage.Write(file, map[string]E{}); err != nil {
 			return fmt.Errorf("initialize table file %s: %w", filename, err)
 		}
 	}
@@ -62,7 +63,7 @@ func ensureFile(filename string) error {
 
 // read all records from table file.
 func read[E Entity](storage Storage[E]) (map[string]E, error) {
-	if err := ensureFile(storage.Filename()); err != nil {
+	if err := ensureFile(storage); err != nil {
 		var e Entity
 		return nil, fmt.Errorf(
 			"read, check %T table file %q: %w",
@@ -86,7 +87,7 @@ func read[E Entity](storage Storage[E]) (map[string]E, error) {
 
 // write all entities to table file.
 func write[E Entity](storage Storage[E], entities map[string]E) error {
-	if err := ensureFile(storage.Filename()); err != nil {
+	if err := ensureFile(storage); err != nil {
 		var e Entity
 		return fmt.Errorf(
 			"write, check %T table file %q: %w",
