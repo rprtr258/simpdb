@@ -1,7 +1,8 @@
-package simpdb_test
+package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/rprtr258/simpdb"
 	"github.com/rprtr258/simpdb/storages"
@@ -18,13 +19,16 @@ func (u User) ID() string {
 	return u.Name
 }
 
-func ExampleNew() {
+func main() {
 	db := simpdb.New("db")
 
-	users, _ := simpdb.GetTable(
+	users, err := simpdb.GetTable(
 		db, "users",
 		storages.NewJSONIndentStorage[User](),
 	)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 	defer users.Flush()
 
 	// get all users as map name -> user

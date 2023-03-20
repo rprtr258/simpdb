@@ -3,7 +3,7 @@
 # simpdb
 
 ## Example usage
-See [db_test.go](./db_test.go) for example usage.
+[See](./cmd/main.go) for example usage.
 
 ## Implementing own storage
 You can implement your own file storage format, if you want to. See examples in [storages](./storages) directory for already implemented file storages.
