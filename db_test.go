@@ -23,7 +23,7 @@ func ExampleNew() {
 
 	users, _ := simpdb.GetTable(
 		db, "users",
-		storages.NewJSONStorage[User](true),
+		storages.NewJSONIndentStorage[User](),
 	)
 	defer users.Flush()
 
