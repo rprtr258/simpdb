@@ -42,12 +42,9 @@ func (t *Table[E]) Flush() error {
 }
 
 // Get entity by id.
-func (t *Table[E]) Get(id string) Optional[E] {
+func (t *Table[E]) Get(id string) (E, bool) {
 	res, ok := t.data[id]
-	return Optional[E]{
-		Value: res,
-		Valid: ok,
-	}
+	return res, ok
 }
 
 // Insert entity into database. If entity already present, does nothing and

@@ -49,7 +49,7 @@ func (q listQuery[E]) Sort(less func(E, E) bool) listQuery[E] {
 }
 
 // Min - get minimal/first entitiy in list. If none, boolean is false.
-func (q listQuery[E]) Min() Optional[E] {
+func (q listQuery[E]) Min() (E, bool) {
 	atLeastOneFound := false
 	var min E
 	q.iter(func(_ string, entity E) bool {
@@ -64,17 +64,15 @@ func (q listQuery[E]) Min() Optional[E] {
 	})
 
 	if !atLeastOneFound {
-		return Optional[E]{}
+		var res E
+		return res, false
 	}
 
-	return Optional[E]{
-		Value: min,
-		Valid: true,
-	}
+	return min, true
 }
 
 // Max - get maximum/last entitiy in list. If none, boolean is false.
-func (q listQuery[E]) Max() Optional[E] {
+func (q listQuery[E]) Max() (E, bool) {
 	atLeastOneFound := false
 	var max E
 	q.iter(func(_ string, entity E) bool {
@@ -89,13 +87,11 @@ func (q listQuery[E]) Max() Optional[E] {
 	})
 
 	if !atLeastOneFound {
-		return Optional[E]{}
+		var res E
+		return res, false
 	}
 
-	return Optional[E]{
-		Value: max,
-		Valid: true,
-	}
+	return max, true
 }
 
 // All - get all entities in list in sorted order.
